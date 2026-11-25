@@ -44,9 +44,12 @@ use protocol::{Decision, Install, Reason, Target};
 const APP: &str = "spaceman";
 const ARTIFACT: &str = "desktop";
 const TARGET: &str = "macos-arm64";
-const ORIGIN: &str = "https://anoma.ly/release";
+// حبیب ۲۴ نوامبر ۲۰۲۶: «جلوِ آپدیتش برای همیشه بسته باشه» ⇐ نشانیِ سرویسِ انتشار عمداً خالی شد،
+// تا حتی اگر روزی مهرِ انتشار (SPACEMAN_RELEASE_BUILD) هم ست شود، هیچ نشانی‌ای برای پرسیدن نماند.
+// سنجش: strings -a روی باینریِ ساخته‌شده نباید هیچ «anoma.ly» داشته باشد.
+const ORIGIN: &str = "";
 /// Every download must come from the release service's own files.
-const FILES: &str = "https://anoma.ly/release/spaceman/files/";
+const FILES: &str = "";
 const STARTUP_DELAY: Duration = Duration::from_secs(10);
 const CHECK_INTERVAL: Duration = Duration::from_secs(60 * 60);
 const DEV_CHECK_INTERVAL: Duration = Duration::from_secs(15 * 60);
@@ -184,12 +187,17 @@ pub(crate) struct Updater {
     shared: Arc<Shared>,
 }
 
+/// حبیب ۲۴ نوامبر ۲۰۲۶: «جلوِ آپدیتش برای همیشه بسته باشه» — همیشه روشن، دست نمی‌خورد.
+const UPDATES_ALWAYS_OFF: bool = true;
+
 impl Updater {
     /// Starts the worker, unless this build can't update at all. A copy it
     /// can't replace still checks, to offer the download.
     pub(crate) fn start() -> Self {
         let installed = bundle::installed_bundle();
-        let disabled = if option_env!("SPACEMAN_RELEASE_BUILD") != Some("1") {
+        // حبیب ۲۴ نوامبر ۲۰۲۶: «جلوِ آپدیتش برای همیشه بسته باشه» ⇐ دیگر به مهرِ انتشار هم نگاه نمی‌شود؛
+        // هر ساختی از این مخزن، همیشه «ساختِ سورس» حساب می‌شود و هیچ‌وقت چک نمی‌کند.
+        let disabled = if UPDATES_ALWAYS_OFF {
             Some(UiUpdateStatus::SourceBuild)
         } else if std::env::var_os("SPACEMAN_DISABLE_UPDATES").is_some_and(|value| value == "1")
             || installed.is_none()
